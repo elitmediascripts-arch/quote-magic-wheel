@@ -2,27 +2,38 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { FileText, Zap, Share2, Bell } from "lucide-react";
+import { MessageSquareText, Zap, Share2, Bell } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Quotely — Send and track client quotes" },
+      { title: "Quote Snap — Create. Share. Close." },
       {
         name: "description",
         content:
-          "Create quotes in seconds, share a link, and auto-follow-up if your client goes quiet.",
+          "The modern way to send quotes, track responses and get paid. Auto follow-ups on day 2 and 5.",
       },
-      { property: "og:title", content: "Quotely — Send and track client quotes" },
+      { property: "og:title", content: "Quote Snap — Create. Share. Close." },
       {
         property: "og:description",
         content:
-          "Create quotes in seconds, share a link, and auto-follow-up if your client goes quiet.",
+          "The modern way to send quotes, track responses and get paid.",
       },
     ],
   }),
   component: Landing,
 });
+
+function Logo({ className = "h-9 w-9" }: { className?: string }) {
+  return (
+    <div
+      className={`${className} flex items-center justify-center rounded-2xl text-primary-foreground`}
+      style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-glow)" }}
+    >
+      <MessageSquareText className="h-1/2 w-1/2" strokeWidth={2.5} />
+    </div>
+  );
+}
 
 function Landing() {
   const navigate = useNavigate();
@@ -33,11 +44,18 @@ function Landing() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-        <div className="flex items-center gap-2 font-semibold">
-          <FileText className="h-5 w-5 text-primary" />
-          Quotely
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      {/* Ambient glow */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 left-1/2 h-[600px] w-[900px] -translate-x-1/2 rounded-full opacity-30 blur-3xl"
+        style={{ background: "var(--gradient-primary)" }}
+      />
+
+      <header className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+        <div className="flex items-center gap-2.5 text-lg font-semibold tracking-tight">
+          <Logo className="h-8 w-8" />
+          Quote<span className="text-primary">Snap</span>
         </div>
         <div className="flex gap-2">
           <Link to="/login">
@@ -51,17 +69,29 @@ function Landing() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-6 pb-24 pt-16 text-center">
+      <main className="relative mx-auto max-w-4xl px-6 pb-24 pt-16 text-center">
+        <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
+          <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+          Create. Share. Close.
+        </div>
         <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">
-          Send quotes that <span className="text-primary">close</span>.
+          The modern way to send quotes,
+          <br />
+          track responses and{" "}
+          <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-primary)" }}>
+            get paid
+          </span>
+          .
         </h1>
         <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-          Create a quote in seconds, share a clean link, and let Quotely follow up automatically
-          when your client goes quiet.
+          Build a clean quote in seconds, share a link, and let Quote Snap nudge your
+          client automatically if they go quiet.
         </p>
         <div className="mt-8 flex justify-center gap-3">
           <Link to="/login">
-            <Button size="lg">Start free</Button>
+            <Button size="lg" className="shadow-lg" style={{ boxShadow: "var(--shadow-glow)" }}>
+              Start free
+            </Button>
           </Link>
         </div>
 
@@ -89,8 +119,11 @@ function Landing() {
 
 function Feature({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-6">
-      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+    <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur transition hover:border-primary/40">
+      <div
+        className="flex h-10 w-10 items-center justify-center rounded-xl text-primary-foreground"
+        style={{ background: "var(--gradient-primary)" }}
+      >
         {icon}
       </div>
       <h3 className="mt-4 font-medium">{title}</h3>
