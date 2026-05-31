@@ -14,7 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      quotes: {
+        Row: {
+          client_email: string
+          client_name: string
+          created_at: string
+          currency: string
+          id: string
+          last_reminder_sent_at: string | null
+          price: number
+          reminder_count: number
+          responded_at: string | null
+          service_description: string
+          share_token: string
+          status: Database["public"]["Enums"]["quote_status"]
+          updated_at: string
+          user_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          client_email: string
+          client_name: string
+          created_at?: string
+          currency?: string
+          id?: string
+          last_reminder_sent_at?: string | null
+          price: number
+          reminder_count?: number
+          responded_at?: string | null
+          service_description: string
+          share_token?: string
+          status?: Database["public"]["Enums"]["quote_status"]
+          updated_at?: string
+          user_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          client_email?: string
+          client_name?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          last_reminder_sent_at?: string | null
+          price?: number
+          reminder_count?: number
+          responded_at?: string | null
+          service_description?: string
+          share_token?: string
+          status?: Database["public"]["Enums"]["quote_status"]
+          updated_at?: string
+          user_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +76,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      quote_status: "sent" | "viewed" | "accepted" | "declined"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +203,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      quote_status: ["sent", "viewed", "accepted", "declined"],
+    },
   },
 } as const
