@@ -9,13 +9,13 @@ import {
 } from "@/lib/quotes.functions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, FileText } from "lucide-react";
+import { CheckCircle2, XCircle, MessageSquareText } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/q/$token")({
   head: ({ params }) => ({
     meta: [
-      { title: "Your quote — Quotely" },
+      { title: "Your quote — Quote Snap" },
       { name: "description", content: `Review and respond to your quote.` },
       { name: "robots", content: "noindex" },
       { property: "og:title", content: "Your quote" },
@@ -84,13 +84,24 @@ function PublicQuote() {
   }).format(Number(data.price));
 
   return (
-    <div className="min-h-screen bg-muted/40 px-4 py-12">
-      <div className="mx-auto max-w-2xl">
-        <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
-          <FileText className="h-4 w-4" /> Quotely
+    <div className="relative min-h-screen overflow-hidden bg-background px-4 py-12">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 left-1/2 h-[500px] w-[800px] -translate-x-1/2 rounded-full opacity-20 blur-3xl"
+        style={{ background: "var(--gradient-primary)" }}
+      />
+      <div className="relative mx-auto max-w-2xl">
+        <div className="mb-6 flex items-center gap-2 text-sm font-medium">
+          <span
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-primary-foreground"
+            style={{ background: "var(--gradient-primary)" }}
+          >
+            <MessageSquareText className="h-3.5 w-3.5" strokeWidth={2.5} />
+          </span>
+          Quote<span className="text-primary">Snap</span>
         </div>
-        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-          <div className="border-b border-border bg-gradient-to-br from-primary/5 to-transparent p-8">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
+          <div className="border-b border-border bg-gradient-to-br from-primary/10 to-transparent p-8">
             <p className="text-sm font-medium text-muted-foreground">Quote for</p>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight">{data.client_name}</h1>
           </div>
