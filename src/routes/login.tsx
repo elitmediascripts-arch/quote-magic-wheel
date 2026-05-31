@@ -4,13 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileText } from "lucide-react";
+import { MessageSquareText } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Sign in — Quotely" },
+      { title: "Sign in — Quote Snap" },
       { name: "description", content: "Sign in to manage your client quotes." },
     ],
   }),
@@ -58,11 +58,21 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
-      <div className="w-full max-w-md rounded-xl border border-border bg-card p-8 shadow-sm">
-        <Link to="/" className="mb-6 flex items-center gap-2 text-lg font-semibold">
-          <FileText className="h-5 w-5 text-primary" />
-          Quotely
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 left-1/2 h-[500px] w-[800px] -translate-x-1/2 rounded-full opacity-25 blur-3xl"
+        style={{ background: "var(--gradient-primary)" }}
+      />
+      <div className="relative w-full max-w-md rounded-2xl border border-border bg-card/80 p-8 shadow-xl backdrop-blur">
+        <Link to="/" className="mb-6 flex items-center gap-2.5 text-lg font-semibold tracking-tight">
+          <span
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-primary-foreground"
+            style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-glow)" }}
+          >
+            <MessageSquareText className="h-4 w-4" strokeWidth={2.5} />
+          </span>
+          Quote<span className="text-primary">Snap</span>
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">
           {mode === "signin" ? "Welcome back" : "Create your account"}
