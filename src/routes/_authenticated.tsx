@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { MessageSquareText, LogOut, Plus } from "lucide-react";
+import { MessageSquareText, LogOut, Plus, Settings as SettingsIcon } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
@@ -64,6 +64,11 @@ function AuthenticatedLayout() {
             <span>Quote<span className="text-primary">Snap</span></span>
           </Link>
           <div className="flex items-center gap-3">
+            <Link to="/settings">
+              <Button variant="ghost" size="sm" className="gap-1.5">
+                <SettingsIcon className="h-4 w-4" /> Settings
+              </Button>
+            </Link>
             <Link to="/quotes/new">
               <Button size="sm" className="gap-1.5">
                 <Plus className="h-4 w-4" /> New quote

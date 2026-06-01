@@ -68,6 +68,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          business_name: string | null
+          created_at: string
+          followup_day2_body: string
+          followup_day2_subject: string
+          followup_day5_body: string
+          followup_day5_subject: string
+          id: string
+          logo_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_name?: string | null
+          created_at?: string
+          followup_day2_body?: string
+          followup_day2_subject?: string
+          followup_day5_body?: string
+          followup_day5_subject?: string
+          id?: string
+          logo_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_name?: string | null
+          created_at?: string
+          followup_day2_body?: string
+          followup_day2_subject?: string
+          followup_day5_body?: string
+          followup_day5_subject?: string
+          id?: string
+          logo_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
