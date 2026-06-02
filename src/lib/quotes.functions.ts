@@ -56,7 +56,7 @@ export const getQuoteByToken = createServerFn({ method: "POST" })
     const { data: row, error } = await supabaseAdmin
       .from("quotes")
       .select(
-        "id, client_name, client_email, service_description, price, currency, status, created_at",
+        "id, client_name, client_email, service_description, price, currency, status, created_at, payment_link_url",
       )
       .eq("share_token", data.token)
       .maybeSingle();

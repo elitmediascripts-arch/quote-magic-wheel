@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyQuotes, deleteQuote } from "@/lib/quotes.functions";
+import { createPaymentLink } from "@/lib/payments.functions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -12,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Copy, Plus, Trash2, ExternalLink, FileText } from "lucide-react";
+import { Copy, Plus, Trash2, ExternalLink, FileText, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -33,6 +34,7 @@ const statusStyles: Record<string, string> = {
 function Dashboard() {
   const fetchQuotes = useServerFn(listMyQuotes);
   const removeQuote = useServerFn(deleteQuote);
+  const makeLink = useServerFn(createPaymentLink);
   const qc = useQueryClient();
 
   const { data: quotes, isLoading } = useQuery({
@@ -45,6 +47,17 @@ function Dashboard() {
     onSuccess: () => {
       toast.success("Quote deleted");
       qc.invalidateQueries({ queryKey: ["quotes"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const invoice = useMutation({
+    mutationFn: (id: string) => makeLink({ data: { quoteId: id } }),
+    onSuccess: (res) => {
+      navigator.clipboard.writeText(res.url).catch(() => {});
+      toast.success("Payment link created and copied");
+      qc.invalidateQueries({ queryKey: ["quotes"] });
+      window.open(res.url, "_blank", "noopener");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
@@ -127,6 +140,34 @@ function Dashboard() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      {q.status === "accepted" && (
+                        q.payment_link_url ? (
+                          <a
+                            href={q.payment_link_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="Open payment link"
+                          >
+                            <Button variant="secondary" size="sm" className="gap-1.5">
+                              <CreditCard className="h-3.5 w-3.5" /> Payment link
+                            </Button>
+                          </a>
+                        ) : (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="gap-1.5"
+                            disabled={invoice.isPending}
+                            onClick={() => invoice.mutate(q.id)}
+                            title="Convert to invoice"
+                          >
+                            <CreditCard className="h-3.5 w-3.5" />
+                            {invoice.isPending && invoice.variables === q.id
+                              ? "Creating…"
+                              : "Convert to invoice"}
+                          </Button>
+                        )
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
