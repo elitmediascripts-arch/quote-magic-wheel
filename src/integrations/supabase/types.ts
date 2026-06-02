@@ -22,6 +22,7 @@ export type Database = {
           currency: string
           id: string
           last_reminder_sent_at: string | null
+          payment_link_url: string | null
           price: number
           reminder_count: number
           responded_at: string | null
@@ -39,6 +40,7 @@ export type Database = {
           currency?: string
           id?: string
           last_reminder_sent_at?: string | null
+          payment_link_url?: string | null
           price: number
           reminder_count?: number
           responded_at?: string | null
@@ -56,6 +58,7 @@ export type Database = {
           currency?: string
           id?: string
           last_reminder_sent_at?: string | null
+          payment_link_url?: string | null
           price?: number
           reminder_count?: number
           responded_at?: string | null
