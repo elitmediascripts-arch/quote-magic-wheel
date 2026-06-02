@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Copy, Bookmark, BookmarkPlus, Trash2, Zap } from "lucide-react";
+import { Copy, Bookmark, BookmarkPlus, Trash2, Zap, MessageCircle, Smartphone } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/quotes/new")({
   head: () => ({
