@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Copy, Bookmark, BookmarkPlus, Trash2, Zap } from "lucide-react";
+import { Copy, Bookmark, BookmarkPlus, Trash2, Zap, MessageCircle, Smartphone } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/quotes/new")({
   head: () => ({
@@ -117,6 +117,10 @@ function NewQuote() {
   };
 
   if (createdLink) {
+    const shareText = encodeURIComponent(`Here's your quote: ${createdLink}`);
+    const whatsappUrl = `https://wa.me/?text=${shareText}`;
+    const smsUrl = `sms:?body=${shareText}`;
+
     return (
       <div className="mx-auto max-w-xl rounded-xl border border-border bg-card p-8 shadow-sm">
         <h1 className="text-2xl font-semibold tracking-tight">Quote ready to share</h1>
@@ -134,8 +138,20 @@ function NewQuote() {
               toast.success("Copied");
             }}
           >
-            <Copy className="mr-1.5 h-4 w-4" /> Copy
+            <Copy className="mr-1.5 h-4 w-4" /> Copy Link
           </Button>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <a href={whatsappUrl} target="_blank" rel="noreferrer">
+            <Button variant="outline" className="w-full gap-2">
+              <MessageCircle className="h-4 w-4" /> Share via WhatsApp
+            </Button>
+          </a>
+          <a href={smsUrl} target="_blank" rel="noreferrer">
+            <Button variant="outline" className="w-full gap-2">
+              <Smartphone className="h-4 w-4" /> Share via SMS
+            </Button>
+          </a>
         </div>
         <div className="mt-6 flex gap-2">
           <Button onClick={() => navigate({ to: "/dashboard" })}>Back to dashboard</Button>
