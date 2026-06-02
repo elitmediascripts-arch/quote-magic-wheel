@@ -34,6 +34,7 @@ const statusStyles: Record<string, string> = {
 function Dashboard() {
   const fetchQuotes = useServerFn(listMyQuotes);
   const removeQuote = useServerFn(deleteQuote);
+  const makeLink = useServerFn(createPaymentLink);
   const qc = useQueryClient();
 
   const { data: quotes, isLoading } = useQuery({
@@ -46,6 +47,17 @@ function Dashboard() {
     onSuccess: () => {
       toast.success("Quote deleted");
       qc.invalidateQueries({ queryKey: ["quotes"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const invoice = useMutation({
+    mutationFn: (id: string) => makeLink({ data: { quoteId: id } }),
+    onSuccess: (res) => {
+      navigator.clipboard.writeText(res.url).catch(() => {});
+      toast.success("Payment link created and copied");
+      qc.invalidateQueries({ queryKey: ["quotes"] });
+      window.open(res.url, "_blank", "noopener");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
