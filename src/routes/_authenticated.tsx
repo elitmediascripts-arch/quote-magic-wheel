@@ -64,6 +64,11 @@ function AuthenticatedLayout() {
             <span>Quote<span className="text-primary">Snap</span></span>
           </Link>
           <div className="flex items-center gap-3">
+            <Link to="/clients">
+              <Button variant="ghost" size="sm" className="gap-1.5">
+                <Users className="h-4 w-4" /> Clients
+              </Button>
+            </Link>
             <Link to="/settings">
               <Button variant="ghost" size="sm" className="gap-1.5">
                 <SettingsIcon className="h-4 w-4" /> Settings
