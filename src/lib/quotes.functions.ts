@@ -19,7 +19,7 @@ export const createQuote = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: row, error } = await supabase
       .from("quotes")
-      .insert({ ...data, user_id: userId })
+      .insert({ ...data, user_id: userId } as any)
       .select("*")
       .single();
     if (error) throw new Error(error.message);
