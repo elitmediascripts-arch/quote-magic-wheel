@@ -128,28 +128,22 @@ function PublicQuote() {
             </div>
           </div>
           {responded ? (
-            <div className="border-t border-border bg-muted/30 p-8 text-center">
-              {data.status === "accepted" ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-center gap-2 text-green-700 dark:text-green-400">
-                    <CheckCircle2 className="h-5 w-5" />
-                    <span className="font-medium">You accepted this quote.</span>
-                  </div>
-                  {data.payment_link_url && (
-                    <a href={data.payment_link_url} target="_blank" rel="noreferrer">
-                      <Button size="lg" className="gap-2">
-                        Pay {formatPrice}
-                      </Button>
-                    </a>
-                  )}
-                </div>
-              ) : (
+            data.status === "accepted" ? (
+              <AcceptedSuccess
+                clientName={data.client_name}
+                quoteId={data.id}
+                amount={formatPrice}
+                paymentLinkUrl={data.payment_link_url ?? null}
+                token={token}
+              />
+            ) : (
+              <div className="border-t border-border bg-muted/30 p-8 text-center">
                 <div className="flex items-center justify-center gap-2 text-red-700 dark:text-red-400">
                   <XCircle className="h-5 w-5" />
                   <span className="font-medium">You declined this quote.</span>
                 </div>
-              )}
-            </div>
+              </div>
+            )
           ) : (
             <div className="border-t border-border bg-muted/30 p-8">
               <p className="mb-4 text-center text-sm text-muted-foreground">
