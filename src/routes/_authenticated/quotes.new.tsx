@@ -168,6 +168,7 @@ function NewQuote() {
         data: {
           client_name: form.client_name,
           client_email: form.client_email,
+          client_phone: form.client_phone || undefined,
           service_description: fullDesc,
           price: totalPrice,
           currency: form.currency.toUpperCase(),

@@ -6,6 +6,7 @@ export type ClientTag = "new" | "repeat" | "ghosted";
 export interface ClientBookEntry {
   email: string;
   name: string;
+  phone: string | null;
   quoteCount: number;
   totalQuoted: number;
   currency: string;
@@ -23,7 +24,7 @@ export const listClients = createServerFn({ method: "GET" })
     const { data, error } = await supabase
       .from("quotes")
       .select(
-        "client_name, client_email, price, currency, status, created_at, responded_at",
+        "client_name, client_email, client_phone, price, currency, status, created_at, responded_at",
       )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -39,10 +40,12 @@ export const listClients = createServerFn({ method: "GET" })
       const created = new Date(q.created_at).getTime();
       const price = Number(q.price ?? 0);
       const responded = q.status === "accepted" || q.status === "declined";
+      const phone = (q as any).client_phone || null;
       if (!existing) {
         byEmail.set(key, {
           email: key,
           name: q.client_name,
+          phone,
           quoteCount: 1,
           totalQuoted: price,
           currency: q.currency ?? "USD",
@@ -59,6 +62,7 @@ export const listClients = createServerFn({ method: "GET" })
         if (new Date(q.created_at).getTime() > new Date(existing.lastQuoteAt).getTime()) {
           existing.lastQuoteAt = q.created_at;
           existing.name = q.client_name;
+          if (phone) existing.phone = phone;
         }
       }
     }

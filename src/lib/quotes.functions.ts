@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 const CreateQuoteSchema = z.object({
   client_name: z.string().trim().min(1).max(120),
   client_email: z.string().trim().email().max(255),
+  client_phone: z.string().trim().max(32).optional(),
   service_description: z.string().trim().min(1).max(5000),
   price: z.number().nonnegative().max(10_000_000),
   currency: z.string().trim().length(3).toUpperCase().default("USD"),
@@ -18,7 +19,7 @@ export const createQuote = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: row, error } = await supabase
       .from("quotes")
-      .insert({ ...data, user_id: userId })
+      .insert({ ...data, user_id: userId } as any)
       .select("*")
       .single();
     if (error) throw new Error(error.message);
