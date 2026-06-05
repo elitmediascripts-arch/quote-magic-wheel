@@ -175,3 +175,154 @@ function PublicQuote() {
     </div>
   );
 }
+
+function invoiceNumberFor(quoteId: string) {
+  // Deterministic INV-XXXXX from quote uuid (uppercase alphanumeric, length 5)
+  const hex = quoteId.replace(/-/g, "").toUpperCase();
+  return `INV-${hex.slice(0, 5)}`;
+}
+
+function AcceptedSuccess({
+  clientName,
+  quoteId,
+  amount,
+  paymentLinkUrl,
+  token,
+}: {
+  clientName: string;
+  quoteId: string;
+  amount: string;
+  paymentLinkUrl: string | null;
+  token: string;
+}) {
+  const qc = useQueryClient();
+  const invoiceNo = invoiceNumberFor(quoteId);
+  const [showInvoice, setShowInvoice] = useState(false);
+
+  // Poll briefly for the payment link if it hasn't appeared yet.
+  useEffect(() => {
+    if (paymentLinkUrl) return;
+    let cancelled = false;
+    let attempts = 0;
+    const tick = () => {
+      if (cancelled) return;
+      attempts += 1;
+      qc.invalidateQueries({ queryKey: ["public-quote", token] });
+      if (attempts < 8) setTimeout(tick, 1500);
+    };
+    const t = setTimeout(tick, 1500);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [paymentLinkUrl, qc, token]);
+
+  const copyLink = async () => {
+    if (!paymentLinkUrl) return;
+    try {
+      await navigator.clipboard.writeText(paymentLinkUrl);
+      toast.success("Payment link copied");
+    } catch {
+      toast.error("Could not copy");
+    }
+  };
+
+  const shareLink = async () => {
+    if (!paymentLinkUrl) return;
+    const shareData = {
+      title: `Invoice ${invoiceNo}`,
+      text: `Invoice ${invoiceNo} — ${amount}`,
+      url: paymentLinkUrl,
+    };
+    if (typeof navigator !== "undefined" && (navigator as Navigator & { share?: (d: ShareData) => Promise<void> }).share) {
+      try {
+        await (navigator as Navigator & { share: (d: ShareData) => Promise<void> }).share(shareData);
+        return;
+      } catch {
+        // fall through to copy
+      }
+    }
+    copyLink();
+  };
+
+  return (
+    <div className="border-t border-border bg-muted/30 p-8">
+      <div className="mx-auto flex max-w-md flex-col items-center text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 ring-1 ring-emerald-500/30">
+          <CheckCircle2 className="h-9 w-9 text-emerald-400" strokeWidth={2.25} />
+        </div>
+        <h2 className="mt-5 text-2xl font-semibold tracking-tight">Quote Accepted!</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Thanks, <span className="font-medium text-foreground">{clientName}</span>.
+        </p>
+
+        <div className="mt-6 w-full rounded-xl border border-border bg-background/60 p-5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Invoice
+            </span>
+            <span className="font-mono text-sm font-medium">{invoiceNo}</span>
+          </div>
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Amount
+            </span>
+            <span className="text-2xl font-semibold text-emerald-400">{amount}</span>
+          </div>
+        </div>
+
+        {!showInvoice ? (
+          <Button
+            size="lg"
+            className="mt-6 w-full gap-2"
+            onClick={() => setShowInvoice(true)}
+          >
+            View Invoice & Payment Link
+          </Button>
+        ) : (
+          <div className="mt-6 w-full space-y-3">
+            {paymentLinkUrl ? (
+              <>
+                <div className="flex items-center gap-2 rounded-lg border border-border bg-background/60 px-3 py-2">
+                  <input
+                    readOnly
+                    value={paymentLinkUrl}
+                    className="min-w-0 flex-1 truncate bg-transparent text-sm outline-none"
+                  />
+                  <Button size="sm" variant="ghost" onClick={copyLink} title="Copy">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <a
+                    href={paymentLinkUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1"
+                  >
+                    <Button size="lg" className="w-full gap-2">
+                      <ExternalLink className="h-4 w-4" /> Pay {amount}
+                    </Button>
+                  </a>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={shareLink}
+                  >
+                    <Share2 className="h-4 w-4" /> Share Link
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-background/60 p-4 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Generating payment link…
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
