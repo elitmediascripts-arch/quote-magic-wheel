@@ -7,9 +7,10 @@ import {
   markQuoteViewed,
   respondToQuote,
 } from "@/lib/quotes.functions";
+import { createPaymentLink } from "@/lib/payments.functions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, MessageSquareText } from "lucide-react";
+import { CheckCircle2, XCircle, MessageSquareText, Copy, Share2, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/q/$token")({
