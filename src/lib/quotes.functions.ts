@@ -92,7 +92,7 @@ export const respondToQuote = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { data: row, error: readErr } = await supabaseAdmin
       .from("quotes")
-      .select("status")
+      .select("*")
       .eq("share_token", data.token)
       .maybeSingle();
     if (readErr) throw new Error(readErr.message);
@@ -108,5 +108,69 @@ export const respondToQuote = createServerFn({ method: "POST" })
       })
       .eq("share_token", data.token);
     if (error) throw new Error(error.message);
+
+    // On acceptance, create a Stripe payment link if Stripe is configured.
+    if (data.response === "accepted" && !row.payment_link_url) {
+      const stripeKey = process.env.STRIPE_SECRET_KEY;
+      if (stripeKey) {
+        try {
+          const currency = (row.currency || "USD").toLowerCase();
+          const unitAmount = Math.round(Number(row.price) * 100);
+
+          const productRes = await fetch("https://api.stripe.com/v1/products", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${stripeKey}`,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+              name: `Quote for ${row.client_name}`,
+              description: String(row.service_description).slice(0, 500),
+            }),
+          });
+          if (!productRes.ok) throw new Error(await productRes.text());
+          const product = (await productRes.json()) as { id: string };
+
+          const priceRes = await fetch("https://api.stripe.com/v1/prices", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${stripeKey}`,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+              product: product.id,
+              currency,
+              unit_amount: String(unitAmount),
+            }),
+          });
+          if (!priceRes.ok) throw new Error(await priceRes.text());
+          const price = (await priceRes.json()) as { id: string };
+
+          const linkBody = new URLSearchParams();
+          linkBody.append("line_items[0][price]", price.id);
+          linkBody.append("line_items[0][quantity]", "1");
+          linkBody.append("metadata[quote_id]", row.id);
+
+          const linkRes = await fetch("https://api.stripe.com/v1/payment_links", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${stripeKey}`,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: linkBody,
+          });
+          if (!linkRes.ok) throw new Error(await linkRes.text());
+          const link = (await linkRes.json()) as { url: string };
+
+          await supabaseAdmin
+            .from("quotes")
+            .update({ payment_link_url: link.url })
+            .eq("id", row.id);
+        } catch (e) {
+          console.error("Stripe payment link creation failed:", e);
+        }
+      }
+    }
+
     return { ok: true };
   });
