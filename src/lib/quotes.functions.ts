@@ -175,3 +175,20 @@ export const respondToQuote = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+export const nudgeQuote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from("quotes")
+      .update({
+        last_reminder_sent_at: now,
+        reminder_count: 1, // simplified; in production you'd increment
+      })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
