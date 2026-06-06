@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as QTokenRouteImport } from './routes/q.$token'
+import { Route as AuthenticatedTrackerRouteImport } from './routes/_authenticated/tracker'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
@@ -36,6 +37,11 @@ const QTokenRoute = QTokenRouteImport.update({
   id: '/q/$token',
   path: '/q/$token',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedTrackerRoute = AuthenticatedTrackerRouteImport.update({
+  id: '/tracker',
+  path: '/tracker',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/clients': typeof AuthenticatedClientsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/tracker': typeof AuthenticatedTrackerRoute
   '/q/$token': typeof QTokenRoute
   '/quotes/new': typeof AuthenticatedQuotesNewRoute
 }
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/clients': typeof AuthenticatedClientsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/tracker': typeof AuthenticatedTrackerRoute
   '/q/$token': typeof QTokenRoute
   '/quotes/new': typeof AuthenticatedQuotesNewRoute
 }
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/_authenticated/clients': typeof AuthenticatedClientsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/tracker': typeof AuthenticatedTrackerRoute
   '/q/$token': typeof QTokenRoute
   '/_authenticated/quotes/new': typeof AuthenticatedQuotesNewRoute
 }
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/dashboard'
     | '/settings'
+    | '/tracker'
     | '/q/$token'
     | '/quotes/new'
   fileRoutesByTo: FileRoutesByTo
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/dashboard'
     | '/settings'
+    | '/tracker'
     | '/q/$token'
     | '/quotes/new'
   id:
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/_authenticated/clients'
     | '/_authenticated/dashboard'
     | '/_authenticated/settings'
+    | '/_authenticated/tracker'
     | '/q/$token'
     | '/_authenticated/quotes/new'
   fileRoutesById: FileRoutesById
@@ -155,6 +167,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/tracker': {
+      id: '/_authenticated/tracker'
+      path: '/tracker'
+      fullPath: '/tracker'
+      preLoaderRoute: typeof AuthenticatedTrackerRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -190,6 +209,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedTrackerRoute: typeof AuthenticatedTrackerRoute
   AuthenticatedQuotesNewRoute: typeof AuthenticatedQuotesNewRoute
 }
 
@@ -197,6 +217,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedClientsRoute: AuthenticatedClientsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedTrackerRoute: AuthenticatedTrackerRoute,
   AuthenticatedQuotesNewRoute: AuthenticatedQuotesNewRoute,
 }
 
