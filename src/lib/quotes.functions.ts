@@ -181,12 +181,17 @@ export const nudgeQuote = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
+    const { data: row } = await supabase
+      .from("quotes")
+      .select("reminder_count")
+      .eq("id", data.id)
+      .single();
     const now = new Date().toISOString();
     const { error } = await supabase
       .from("quotes")
       .update({
         last_reminder_sent_at: now,
-        reminder_count: 1, // simplified; in production you'd increment
+        reminder_count: (row?.reminder_count ?? 0) + 1,
       })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
