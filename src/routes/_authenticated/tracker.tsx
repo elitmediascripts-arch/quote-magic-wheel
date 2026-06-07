@@ -322,11 +322,11 @@ function Tracker() {
                       <Bell className="h-3.5 w-3.5" /> Nudge
                     </Button>
                   )}
-                  <Link to={`/q/${q.share_token}`} target="_blank">
+                  <a href={`/q/${q.share_token}`} target="_blank" rel="noopener noreferrer">
                     <Button size="sm" variant="ghost" className="gap-1.5">
                       <Eye className="h-3.5 w-3.5" /> View
                     </Button>
-                  </Link>
+                  </a>
                 </div>
               </CardContent>
             </Card>
