@@ -25,12 +25,25 @@ export const Route = createFileRoute("/")({
 });
 
 function Logo({ className = "h-9 w-9" }: { className?: string }) {
+  // Prefer a repo-hosted brand file at /logo.png. If not present, fall back
+  // to the original inline icon so the header remains consistent.
   return (
     <div
-      className={`${className} flex items-center justify-center rounded-2xl text-primary-foreground`}
+      className={`${className} flex items-center justify-center rounded-2xl overflow-hidden`}
       style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-glow)" }}
     >
-      <MessageSquareText className="h-1/2 w-1/2" strokeWidth={2.5} />
+      <img
+        src="/logo.png"
+        alt="QuoteSnap"
+        className="h-full w-full object-contain"
+        onError={(e) => {
+          // Hide broken image and leave the SVG icon as fallback
+          (e.currentTarget as HTMLImageElement).style.display = "none";
+        }}
+      />
+      <div className="absolute inset-0 flex items-center justify-center text-primary-foreground">
+        <MessageSquareText className="h-1/2 w-1/2" strokeWidth={2.5} />
+      </div>
     </div>
   );
 }

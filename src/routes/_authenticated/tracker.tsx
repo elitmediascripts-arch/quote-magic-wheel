@@ -1,15 +1,41 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyQuotes, nudgeQuote } from "@/lib/quotes.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Search, Bell, Send, Eye, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow, addDays, isAfter } from "date-fns";
+
+type FollowupTemplates = {
+  followup_day2_subject: string;
+  followup_day2_body: string;
+  followup_day5_subject: string;
+  followup_day5_body: string;
+};
+
+const DEFAULT_FOLLOWUP_TEMPLATES: FollowupTemplates = {
+  followup_day2_subject: "Quick follow-up on your quote",
+  followup_day2_body:
+    "Hi {{client_name}},\n\nJust checking in on the quote I sent over a couple of days ago. Let me know if you have any questions!\n\nYou can review it here: {{quote_link}}\n\nThanks!",
+  followup_day5_subject: "Still interested?",
+  followup_day5_body:
+    "Hi {{client_name}},\n\nWanted to circle back one more time on the quote. Happy to adjust anything if needed.\n\nReview here: {{quote_link}}\n\nThanks!",
+};
 
 export const Route = createFileRoute("/_authenticated/tracker")({
   head: () => ({ meta: [{ title: "Quote Tracker — Quotely" }] }),
@@ -18,22 +44,38 @@ export const Route = createFileRoute("/_authenticated/tracker")({
 
 type FilterTab = "all" | "sent" | "viewed" | "accepted" | "declined";
 
-type DisplayStatus = "Unseen" | "Seen" | "Accepted" | "Declined" | "Expired";
+type DisplayStatus = "Sent" | "Unseen" | "Seen" | "Accepted" | "Declined" | "Expired";
+
+type TrackerQuote = {
+  id: string;
+  status: "sent" | "viewed" | "accepted" | "declined";
+  created_at: string;
+  service_description: string;
+  client_name: string;
+  client_email: string;
+  price: number;
+  currency: string;
+  share_token: string;
+  reminder_count?: number | null;
+  last_reminder_sent_at?: string | null;
+  displayStatus: DisplayStatus;
+};
 
 const tabLabels: Record<FilterTab, string> = {
   all: "All",
-  sent: "Unseen",
+  sent: "Sent",
   viewed: "Seen",
   accepted: "Accepted",
   declined: "Declined",
 };
 
 const badgeStyles: Record<DisplayStatus, string> = {
+  Sent: "bg-blue-500/15 text-blue-300 border-blue-500/20",
   Unseen: "bg-amber-500/15 text-amber-300 border-amber-500/20",
-  Seen: "bg-blue-500/15 text-blue-300 border-blue-500/20",
+  Seen: "bg-emerald-500/15 text-emerald-300 border-emerald-500/20",
   Accepted: "bg-emerald-500/15 text-emerald-300 border-emerald-500/20",
   Declined: "bg-red-500/15 text-red-300 border-red-500/20",
-  Expired: "bg-muted/60 text-muted-foreground border-border/60",
+  Expired: "bg-red-500/15 text-red-300 border-red-500/20",
 };
 
 function deriveDisplayStatus(q: {
@@ -59,7 +101,9 @@ function deriveDisplayStatus(q: {
 
   if (isAfter(new Date(), expiry)) return "Expired";
   if (base === "viewed") return "Seen";
-  return "Unseen";
+
+  const sentThreshold = addDays(new Date(q.created_at), 1);
+  return isAfter(new Date(), sentThreshold) ? "Unseen" : "Sent";
 }
 
 function Tracker() {
@@ -83,8 +127,69 @@ function Tracker() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeQuote, setActiveQuote] = useState<TrackerQuote | null>(null);
+  const [followupTemplates, setFollowupTemplates] = useState<FollowupTemplates | null>(null);
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("user_settings")
+        .select(
+          "followup_day2_subject,followup_day2_body,followup_day5_subject,followup_day5_body",
+        )
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (data) {
+        setFollowupTemplates({
+          followup_day2_subject: data.followup_day2_subject,
+          followup_day2_body: data.followup_day2_body,
+          followup_day5_subject: data.followup_day5_subject,
+          followup_day5_body: data.followup_day5_body,
+        });
+      }
+    })();
+  }, []);
+
   const fmt = (n: number, c: string) =>
     new Intl.NumberFormat(undefined, { style: "currency", currency: c }).format(n);
+
+  const isNudgeEligible = (q: TrackerQuote) => {
+    if (q.displayStatus !== "Unseen" && q.displayStatus !== "Seen") return false;
+    return isAfter(new Date(), addDays(new Date(q.created_at), 1));
+  };
+
+  const getFollowupPreview = (q: TrackerQuote) => {
+    const templates = followupTemplates ?? DEFAULT_FOLLOWUP_TEMPLATES;
+    const isDay5 = isAfter(new Date(), addDays(new Date(q.created_at), 5));
+    const subject = isDay5 ? templates.followup_day5_subject : templates.followup_day2_subject;
+    const body = isDay5 ? templates.followup_day5_body : templates.followup_day2_body;
+    const link = origin ? `${origin}/q/${q.share_token}` : "{{quote_link}}";
+    const message = body
+      .replace(/{{client_name}}/g, q.client_name)
+      .replace(/{{quote_link}}/g, link);
+
+    return { subject, message, type: isDay5 ? "Day 5" : "Day 2" };
+  };
+
+  const handleManualNudge = () => {
+    if (!activeQuote) return;
+    nudge.mutate(activeQuote.id, {
+      onSuccess: () => {
+        setDialogOpen(false);
+        setActiveQuote(null);
+      },
+    });
+  };
 
   const filtered = useMemo(() => {
     let list = (quotes ?? []).map((q) => ({
@@ -204,13 +309,15 @@ function Tracker() {
 
                 {/* Right: actions */}
                 <div className="flex items-center gap-2">
-                  {(q.status === "sent" || q.status === "viewed") && (
+                  {isNudgeEligible(q) && (
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="gap-1.5"
+                      className="gap-1.5 bg-blue-600 text-white hover:bg-blue-700"
                       disabled={nudge.isPending}
-                      onClick={() => nudge.mutate(q.id)}
+                      onClick={() => {
+                        setActiveQuote(q);
+                        setDialogOpen(true);
+                      }}
                     >
                       <Bell className="h-3.5 w-3.5" /> Nudge
                     </Button>
@@ -226,6 +333,47 @@ function Tracker() {
           ))}
         </div>
       )}
+
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setActiveQuote(null);
+        }
+        setDialogOpen(open);
+      }}>
+        <DialogContent className="space-y-6">
+          <DialogHeader>
+            <DialogTitle>Send Manual Nudge Now</DialogTitle>
+            <DialogDescription>
+              Preview the exact follow-up message that will be sent to {activeQuote?.client_name || "your client"}.
+            </DialogDescription>
+          </DialogHeader>
+
+          {activeQuote ? (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-border bg-muted/10 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{getFollowupPreview(activeQuote).type} template</p>
+                <p className="mt-2 text-sm font-medium">{getFollowupPreview(activeQuote).subject}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-background p-4 text-sm leading-6 text-foreground whitespace-pre-wrap">
+                {getFollowupPreview(activeQuote).message}
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-border bg-muted/10 p-4 text-sm text-muted-foreground">
+              Select a quote to preview the nudge message.
+            </div>
+          )}
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleManualNudge} disabled={!activeQuote || nudge.isPending}>
+              Send Manual Nudge Now
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
